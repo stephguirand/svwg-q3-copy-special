@@ -30,6 +30,7 @@ SPL_REGEX = re.compile(r'__(\w+)__')
 
 class RandomFileSet:
     """Creates a set of special/notspecial files in a random temp dir"""
+
     def __init__(self):
         self.tmp_dir, self.file_list = self.random_fileset()
         self.abs_file_list = [
@@ -51,7 +52,7 @@ class RandomFileSet:
             prefix
             + "".join(random.sample(string.ascii_lowercase, size))
             + suffix
-            )
+        )
         return filename
 
     def random_fileset(self):
@@ -89,11 +90,11 @@ class TestCopyspecial(unittest.TestCase):
             os.path.abspath(os.path.join(os.getcwd(), f))
             for f in os.listdir('.')
             if SPL_REGEX.search(f)
-            ]
+        ]
         self.assertIsInstance(
             actual_path_list, list,
             "get_special_paths is not returning a list"
-            )
+        )
         self.assertListEqual(actual_path_list, expected_path_list)
 
     def test_get_special_paths_2(self):
@@ -102,13 +103,13 @@ class TestCopyspecial(unittest.TestCase):
         self.assertIsInstance(
             actual_path_list, list,
             "get_special_paths is not returning a list"
-            )
+        )
         a = sorted(actual_path_list)
         b = sorted(self.rfs.spl_file_list)
         self.assertListEqual(
             a, b,
             "Returned path list does not match expected path list"
-            )
+        )
 
     def test_copy_to(self):
         """Checking the copy_to function"""
@@ -116,12 +117,12 @@ class TestCopyspecial(unittest.TestCase):
         # directory if it does not yet exist.
         # Call the test module's copy_to() function
         dest_dir = "/tmp/kenzie-copyto"
-        shutil.rmtree(dest_dir, ignore_errors=True)
+        self.clean(dest_dir)
         self.module.copy_to(self.rfs.abs_file_list, dest_dir + "/dest")
         # check if dest_dir was created and all files got copied
         a = sorted(os.listdir(dest_dir + "/dest"))
         b = sorted(self.rfs.file_list)
-        shutil.rmtree(dest_dir, ignore_errors=True)
+        self.clean(dest_dir)
         self.assertEqual(a, b, "The copy_to function is not working")
 
     def test_zip_to_1(self):
@@ -136,7 +137,7 @@ class TestCopyspecial(unittest.TestCase):
         self.assertEqual(
             sorted(dest_files), sorted(self.rfs.file_list),
             "original files are not being zipped"
-            )
+        )
         self.clean(zip_name)
 
     def test_main_print(self):
@@ -152,18 +153,24 @@ class TestCopyspecial(unittest.TestCase):
         """Check if main() function performs a copy_to operation"""
         to_dir = "/tmp/kenzie-copyspl-copyto"
         args = ["--todir", to_dir, self.rfs.tmp_dir]
-        shutil.rmtree(to_dir, ignore_errors=True)
+
+        # cleanup destination before running test
+        self.clean(to_dir)
+
         self.module.main(args)
         expected = list(filter(SPL_REGEX.search, os.listdir(to_dir)))
         self.assertListEqual(
             os.listdir(to_dir), expected,
             "The copy_to() function is not being called from main()")
-        shutil.rmtree(to_dir, ignore_errors=True)
+
+        # cleanup destination before running test
+        self.clean(to_dir)
 
     @staticmethod
     def clean(filepath):
         try:
-            os.remove(filepath)
+            shutil.rmtree(filepath, ignore_errors=True)  # remove as dir
+            os.remove(filepath)  # remove as file
         except OSError:
             pass
 
@@ -195,7 +202,7 @@ class TestCopyspecial(unittest.TestCase):
         self.assertNotEqual(
             self.module.__author__, "???",
             "Author string is not completed"
-            )
+        )
 
 
 if __name__ == '__main__':
